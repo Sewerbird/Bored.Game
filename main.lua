@@ -10,12 +10,14 @@ Assets = {}
 GS = {} --Gamestate
 
 local Gob = require('engine/Gob')
-local SceneGraphRelation = require('engine/render_graph')
+local RenderGraph = require('engine/render_graph')
+local EventQueue = require('engine/event_queue')
 
 local scenegraph = nil
+local inputqueue = nil
 
 function love.load()
-  require('src/Assets')(Assets)
+  --require('src/Assets')(Assets)
 
   local gobset = _.times(10, function(i)
     local g = Gob(GS,{
@@ -63,11 +65,22 @@ function love.load()
     return g.gid
   end)
 
-  scenegraph = SceneGraphRelation.over(gobset)
+  scenegraph = RenderGraph.over(gobset)
+  inputqueue = EventQueue()
 	
 end
 
 function love.keypressed(key)
+  inputqueue:add('debugA',{
+    begin = function(self)
+      print("Beginning debug event A")
+    end,
+    update = function(self,dt)
+    end,
+    finish = function(self,dt)
+      print("Finishing debug event A with " .. dt .. " left on the clock")
+    end
+  },1.1)
 end
 
 function love.mousepressed(x,y)
@@ -83,6 +96,7 @@ function love.mousepressed(x,y)
 end
 
 function love.update(dt)
+  inputqueue:update(dt)
   scenegraph:traverse(function(gid)
     --Support Anim8 animation
     if GS[gid].animation then

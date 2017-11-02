@@ -1,9 +1,8 @@
 local Relation = require('engine/relation')
 local Gob = require('engine/gob')
-
-math.contains = function (val,low,high)
+math.contains = function(val,low,high)
   if low > high then c = low; low = high; high = c end
-  return val < high and val > low
+  return low < val and val < high
 end
 
 local RenderGraph = class(Relation, function(self)
@@ -15,7 +14,11 @@ local RenderGraph = class(Relation, function(self)
 end)
 
 function RenderGraph.over(set)
-  return _.reduce(set, function(relation, gid) return relation:add(gid, nil) end, RenderGraph())
+  local result = RenderGraph()
+  for i, gid in ipairs(set) do
+    result:add(gid, nil)
+  end
+  return result
 end
 
 function RenderGraph:add(gid, parent_gid)
@@ -33,9 +36,8 @@ function RenderGraph:link(parent_gid, child_gid)
   table.insert(self.set[child_gid].up, parent_gid)
 end
 
-function RenderGraph:remove(gid_gob)
-  if type(gob) == 'string' then self.set[gid] = nil
-  elseif type(gob) == 'table' then self.set[gid_gob.gid] = nil end
+function RenderGraph:remove(gid)
+  self.set[gid] = nil
   return self
 end
 
@@ -62,6 +64,7 @@ function RenderGraph:screenPxToGobs(s_x,s_y)
   local result = {}
   local gob, a, b
 
+  --TODO: this checks everything. Might be fun to do a more refined datastructure
   for gid, _ in pairs(self.set) do
     gob = GS[gid]
     if gob.clickbox ~= nil then

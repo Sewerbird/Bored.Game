@@ -12,9 +12,8 @@ function Relation:add(gid)
   return self
 end
 
-function Relation:remove(gid_gob)
-  if type(gob) == 'string' then self.set[gid] = nil
-  elseif type(gob) == 'table' then self.set[gid_gob.gid] = nil end
+function Relation:remove(gid)
+  self.set[gid] = nil
   return self
 end
 
