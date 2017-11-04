@@ -1,20 +1,21 @@
-local Relation = require('engine/relation')
-local Gob = require('engine/gob')
-math.contains = function(val,low,high)
-  if low > high then c = low; low = high; high = c end
-  return low < val and val < high
+local RenderGraph = {}
+
+RenderGraph.__index = RenderGraph
+
+RenderGraph.new = function()
+  local self = setmetatable({}, RenderGraph)
+  self.root = {
+    gid = uuid(),
+    world_x = 0,
+    world_y = 0
+  }
+  self.set = {}
+  self.set[self.root.gid] = { nid = gid, up = {}, down = {} }
+	return self
 end
 
-local RenderGraph = class(Relation, function(self)
-  Relation.init(self)
-  self.root = Gob(GS)
-  self.root.world_x = 0
-  self.root.world_y = 0
-  self.set[self.root.gid] = { nid = gid, up = {}, down = {} }
-end)
-
 function RenderGraph.over(set)
-  local result = RenderGraph()
+  local result = RenderGraph.new()
   for i, gid in ipairs(set) do
     result:add(gid, nil)
   end
@@ -22,8 +23,6 @@ function RenderGraph.over(set)
 end
 
 function RenderGraph:add(gid, parent_gid)
-  assert(GS[gid], 'Unable to add gid: does not exist. ' .. inspect(gid))
-
 	self.set[gid] = { nid = gid, up = {}, down = {} }
   if not parent_gid then parent_gid = self.root.gid end
   self:link(parent_gid, gid)

@@ -1,6 +1,12 @@
-local EventQueue = class(function (self)
+local EventQueue = {}
+
+EventQueue.__index = EventQueue
+
+EventQueue.new = function(self)
+	local self = setmetatable({},EventQueue)
   self.queue = {}
-end)
+	return self
+end
 
 function EventQueue:update(dt)
   while #self.queue > 0 and dt > 0 do
