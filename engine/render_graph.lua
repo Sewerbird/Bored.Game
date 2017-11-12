@@ -29,15 +29,51 @@ function RenderGraph:add(gid, parent_gid)
   return self
 end
 
+function RenderGraph:addAll(arr_gid, parent_gid)
+  for i, gid in ipairs(arr_gid) do
+    self:add(gid,parent_gid)
+  end
+  return self
+end
+
+function RenderGraph:relink(child_gid, new_parent_gid)
+  local parent_gid = self.set[child_gid].up[1]
+  table.insert(self.set[child_gid].up, new_parent_gid)
+  table.insert(self.set[new_parent_gid].down, child_gid)
+  local idx
+  for i, child in ipairs(self.set[parent_gid].down) do
+    if child == child_gid then
+      idx = i
+    end
+  end
+  table.remove(self.set[parent_gid],idx)
+  self:sortByY(new_parent_gid)
+end
+
 function RenderGraph:link(parent_gid, child_gid)
   --TODO: Check that no cycle is introduced
   table.insert(self.set[parent_gid].down, child_gid)
   table.insert(self.set[child_gid].up, parent_gid)
+  self:sortByY(parent_gid)
 end
 
 function RenderGraph:remove(gid)
   self.set[gid] = nil
   return self
+end
+
+function RenderGraph:sortByY(root)
+  if root == nil then root = self.root.gid end
+  table.sort(self.set[root].down, function(a,b)
+    if a and b then
+      assert(GS[a] and GS[b], F"Error y-sorting. a({inspect(a)}): {inspect(GS[a])}, b({inspect(b)}): {inspect(GS[b])}")
+      return GS[a].world_y < GS[b].world_y
+    elseif a == nil then
+      return false
+    elseif b == nil then
+      return true
+    end
+  end)
 end
 
 function RenderGraph:traverse(tgt_gid, pre_fn, post_fn)
@@ -56,24 +92,31 @@ function RenderGraph:traverse(tgt_gid, pre_fn, post_fn)
  return a, b
 end
 
-function RenderGraph:screenPxToGobs(s_x,s_y)
+function RenderGraph:screenPxToWorld(s_x,s_y)
   local w_x = self.root.world_x + s_x
   local w_y = self.root.world_y + s_y
+  return w_x, w_y
+end
 
+function RenderGraph:worldPxToGobs(w_x,w_y)
   local result = {}
   local gob, a, b
 
   --TODO: this checks everything. Might be fun to do a more refined datastructure
   for gid, _ in pairs(self.set) do
     gob = GS[gid]
-    if gob.clickbox ~= nil then
-      a = math.contains(w_x,gob.world_x + gob.clickbox.origin_x, gob.world_x + gob.clickbox.world_w + gob.clickbox.origin_x)
-      b = math.contains(w_y,gob.world_y + gob.clickbox.origin_y, gob.world_y + gob.clickbox.world_h + gob.clickbox.origin_y)
-      if a and b then table.insert(result,gid) end
+    if gob and gob.hitbox ~= nil and gob.hitbox:test(gob, w_x,w_y) then 
+      table.insert(result,gid) 
     end
   end
 
   return result
+end
+
+function RenderGraph:screenPxToGobs(s_x,s_y)
+  local w_x, w_y = self:screenPxToWorld(s_x,s_y)
+
+  return self:worldPxToGobs(w_x,w_y)
 end
 
 return RenderGraph

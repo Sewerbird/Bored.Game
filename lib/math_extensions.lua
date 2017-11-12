@@ -19,7 +19,18 @@ math.lerp = function(a, b, dt)
   local result = {}
   for i = 1, #a do
     local w = b[i] - a[i]
-    table.insert(result, (w * dt) / w + a[i] )
+    table.insert(result, w * dt + a[i] )
   end
   return result
 end
+
+math.dist = function(a, b)
+  assert(#a == #b, F"You can only find the distance between vectors of the same dimension, but you have {inspect(a)} and {inspect(b)}")
+  local sum = 0
+  for i = 1, #a do
+    sum = sum + ((b[i] - a[i]) * (b[i] - a[i]))
+  end
+  return math.sqrt(sum)
+end
+
+
