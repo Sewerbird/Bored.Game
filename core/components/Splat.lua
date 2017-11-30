@@ -1,9 +1,9 @@
-local Animation = {}
+local Splat = {}
 
-Animation.__index = Animation
+Splat.__index = Splat
 
-Animation.new = function(sheet, frames, frame_duration, origin_x, origin_y, scale_x, scale_y, rotation)
-  local self = setmetatable({},Animation)
+Splat.new = function(sheet, frames, frame_duration, origin_x, origin_y, scale_x, scale_y, rotation)
+  local self = setmetatable({},Splat)
   self.frames = frames
   self.sheet = sheet
   self.curr_frame = 1
@@ -20,15 +20,15 @@ Animation.new = function(sheet, frames, frame_duration, origin_x, origin_y, scal
   return self
 end
 
-function Animation:update(gob, dt)
+function Splat:update(gob, dt)
   self.timer = self.timer + dt
   if self.timer > self.frame_duration then
     self.timer = self.timer - self.frame_duration
-    --self.curr_frame = math.mod(self.curr_frame,#self.frames)+1
+    self.curr_frame = math.mod(self.curr_frame,#self.frames)+1
   end
 end
 
-function Animation:draw(gob)
+function Splat:draw(gob)
   love.graphics.push()
   love.graphics.translate(self.origin_x,self.origin_y)
   love.graphics.setColor(self.red,self.green,self.blue)
@@ -37,14 +37,4 @@ function Animation:draw(gob)
   love.graphics.pop()
 end
 
-function Animation:translate(dx,dy)
-  self.origin_x = self.origin_x + dx
-  self.origin_y = self.origin_y + dy
-end
-
-function Animation:tilt(degrees)
-  local radians = degrees * math.pi/180
-  self.rotation = self.rotation + radians
-end
-
-return Animation
+return Splat

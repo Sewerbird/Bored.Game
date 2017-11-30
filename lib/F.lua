@@ -53,8 +53,4 @@ setmetatable(F, {
    __call = format
 })
 
-local function log(str)
-  print(format(_,str))
-end
-
-return F, log
+return F

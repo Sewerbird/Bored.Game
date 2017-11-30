@@ -12,18 +12,18 @@ function EventQueue:update(dt)
   while #self.queue > 0 and dt > 0 do
     if not self.queue[1].processed then
       self.queue[1].processed = true
-      self.queue[1].event:begin()
+      if self.queue[1].event.begin then self.queue[1].event:begin() end
       if self.queue[1].duration <= 0 then
         table.remove(self.queue,1)
       end
     else
       --Handle events with durations
       if self.queue[1].duration > dt then
-        self.queue[1].event:update(dt)
+        if self.queue[1].event.update then self.queue[1].event:update(dt) end
         self.queue[1].duration = self.queue[1].duration - dt
         dt = 0 
       else
-        self.queue[1].event:finish(self.queue[1].duration)
+        if self.queue[1].event.finish then self.queue[1].event:finish(self.queue[1].duration) end
         dt = dt - self.queue[1].duration
         self.queue[1].duration = 0
         table.remove(self.queue,1)
