@@ -1,7 +1,31 @@
 local EventQueue = require('core/EventQueue')
 local MessageBus = require('core/MessageBus')
-local CoordinateSystem = require('core/CoordinateSystem')
 local SceneGraph = require('core/SceneGraph')
+
+local OrthographicCamera = {}
+OrthographicCamera.__index = OrthographicCamera
+OrthographicCamera.new = function(graph, target)
+  local self = setmetatable({},OrthographicCamera)
+  self.gid = uuid()
+  self.graph = graph
+  self.target = target
+  return self
+end
+function OrthographicCamera:draw()
+  --Sort scenegraph by Z
+  local scene_ids = {}
+  GS[self.graph]:traverse(self.target,function(self, gid)
+    table.insert(scene_ids, gid)
+  end)
+  --Draw all
+  print(F"Scene_ids has size {#scene_ids}")
+  for i, gid in ipairs(scene_ids) do
+    if GS[gid].splat then
+      print("Drawing a splat")
+      GS[gid].splat:draw()
+    end
+  end
+end
 
 local Scene = {}
 
@@ -11,47 +35,28 @@ Scene.new = function (init)
   local self = setmetatable({},Scene)
   self.gid = uuid()
   self.input_queue = EventQueue.new() --For when the players want a say
-  self.event_queue = EventQueue.new() --For when the gamerules happen
   self.message_bus = MessageBus.new() --For notifying the game objects
-  self.worldspace = GS:add(CoordinateSystem.new('worldspace'))
-  self.scenegraph = GS:add(SceneGraph.new('scenespace',self.worldspace))
-
-  --Locate the root element at the origin of worldspace and the base of the hierarchy
-  self.root = GS:addBlank()
-  GS[self.scenegraph]:place(self.root,nil,0,0,0)
+  self.scenegraph = GS:add(SceneGraph.new()) --Define a scenegraph with a default origin root
+  self.camera = GS:add(OrthographicCamera.new(self.scenegraph, GS[self.scenegraph].root)) --Specify a camera for the scene
   
   --Subscribe to standard events
-  self.message_bus:subscribe(self.gid,"mouse", function() print "Mouse event" end)
-  self.message_bus:subscribe(self.gid,"keyboard", function() print "Key event" end)
+  self.message_bus:subscribe(self.gid, "mouse", function() print "Mouse event" end)
+  self.message_bus:subscribe(self.gid, "keyboard", function() print "Key event" end)
+  self.message_bus:subscribe(self.gid, "time", function() print "Time passed" end)
+  self.message_bus:subscribe(self.gid, self.gid, function() print "Got direct event" end)
 
   return self
 end
 
 function Scene:draw()
-  local to_draw = {}
-  GS[self.scenegraph]:traverse(self.root, function(self, tgt_gid)
-    if GS[tgt_gid].worldspace then
-      love.graphics.push()
-      screencoord = GS[GS.screenspace]:convertFromSystem('worldspace', GS[tgt_gid].worldspace)
-      love.graphics.translate(screencoord.x, screencoord.y)
-    end
-    if GS[tgt_gid].draw then
-      GS[tgt_gid]:draw()
-    end
-  end, nil, function(self, tgt_gid)
-    if GS[tgt_gid].worldspace then
-      love.graphics.pop()
-    end
-  end)
+  GS[self.camera]:draw()
 end
 
 function Scene:update(dt)
   self.input_queue:update(dt)
-  self.event_queue:update(dt)
 end
 
 function Scene:input(channel, event)
-  --This lets us reify mouse/keyboard/etc events
   self.input_queue:add(channel, event)
 end
 
@@ -63,7 +68,7 @@ function Scene:addToScene(gids, parent, x, y, z)
     gids = { gids }
   end
   for i, gid in ipairs(gids) do
-    print(F"Scene adding {gid} {inspect({x,y,z})}")
+    print(F"Scene adding {gid} @ {inspect({x,y,z})}")
     GS[self.scenegraph]:place(gid, parent, x, y, z)
   end
 end

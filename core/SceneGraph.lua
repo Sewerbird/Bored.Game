@@ -1,3 +1,5 @@
+local Stead = require('core/components/Stead')
+
 local SceneGraph = {}
 
 SceneGraph.__index = SceneGraph
@@ -8,29 +10,19 @@ SceneGraph.new = function(name, coordinate_system)
   self.gid = uuid()
   self.type = 'SceneGraph'
   self.name = name
-  self.definesTo = {}
-  self.definesFrom = {}
+  self.root = GS:add({
+    gid = uuid(),
+    stead = Stead.new({x = 0, y = 0, z = 0},nil)
+  })
   return self
 end
 
-function SceneGraph:place(gid, parent, x, y, z)
-  x = x or 0
-  y = y or 0
-  z = z or 0
-  GS[gid][self.name] = { 
-    parent = parent,
-    system = self.gid, 
-    children = {}
-  }
-  GS[self.coordinate_space]:place(gid, x, y, z)
-  if GS[parent] and GS[parent][self.name] then table.insert(GS[parent][self.name].children, gid) end
-  return gid
-end
-
-function SceneGraph:reparent(gid, new_parent)
-  GS[GS[gid][self.name].parent][self.name].children[gid] = false
-  GS[gid][self.name].parent = new_parent
-  if GS[parent] and GS[parent][self.name] then table.insert(GS[parent][self.name].children, gid) end
+function SceneGraph:setParent(gid, new_parent)
+  assert(GS[gid].stead and GS[new_parent].stead, F"Child and new parent must both have Steads, but child has {inspect(GS[gid].stead} and new parent has {inspect(GS[new_parent].stead)}")
+  assert(not GS[gid].stead.parent or GS[GS[gid].parent].stead, F"Old parent must have a stead, but has {inspect(GS[GS[gid].parent].stead")
+  GS[GS[gid].stead.parent].children[gid] = nil
+  GS[gid].stead.parent = new_parent
+  GS[GS[gid].stead.parent].children[gid] = true
   return gid
 end
 
@@ -41,8 +33,10 @@ function SceneGraph:traverse(root_gid, pre_fn, in_fn, post_fn)
     pre = pre_fn(self, root_gid)
   end
 
-  if GS[root_gid][self.name].children then
-    for i, key in ipairs(GS[root_gid][self.name].children) do
+  assert(GS[root_gid], F"UID not present in GS {root_gid}")
+  if GS[root_gid].stead and GS[root_gid].stead.children then
+    for key, _ in pairs(GS[root_gid].stead.children) do
+      print(F"Checking children of {inspect(GS[root_gid])}")
       local in_pre, in_post = self:traverse(key, pre_fn, in_fn, post_fn)
       if in_fn then in_fn(self, root_gid, in_pre, in_post) end
     end
@@ -59,24 +53,6 @@ function SceneGraph:ascend(tgt_gid, fn)
     self:ascend(GS[tgt_gid][self.name].parent)
   end
   return val
-end
-
-function SceneGraph:convertToSystem(them_system, me_coord)
-  assert(self.definesTo[them_system], F"No conversion from me to {them_system} defined yet")
-  return self.definesTo[them_system](me_coord)
-end
-
-function SceneGraph:convertFromSystem(them_system, them_coord)
-  assert(self.definesFrom[them_system], F"No conversion from {them_system} to me defined yet")
-  return self.definesFrom[them_system](them_coord)
-end
-
-function SceneGraph:defineTo(tgt_system_name, fn)
-  self.definesTo[tgt_system_name] = fn
-end
-
-function SceneGraph:defineFrom(tgt_system_name, fn)
-  self.definesFrom[tgt_system_name] = fn
 end
 
 return SceneGraph

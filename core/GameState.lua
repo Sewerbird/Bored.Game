@@ -1,5 +1,3 @@
-local CoordinateSystem = require('core/CoordinateSystem')
-
 local Gamestate = {}
 
 Gamestate.__index = Gamestate 
@@ -7,7 +5,6 @@ Gamestate.__index = Gamestate
 Gamestate.new = function (init)
   local self = setmetatable({}, Gamestate)
 
-  self.screenspace = self:add(CoordinateSystem.new('screenspace'))
   self.scenes = {}
 
   return self
@@ -15,7 +12,7 @@ end
 
 --Scene Stack
 function Gamestate:currentScene()
-  return self.scenes[#self.scenes]
+  return self[self.scenes[#self.scenes]]
 end
 
 function Gamestate:pushScene(scene)
@@ -27,9 +24,11 @@ function Gamestate:popScene()
 end
 
 --Game element constructors
-function Gamestate:addBlank()
+function Gamestate:addBlank(init)
   local gid = uuid()
-  self[gid] = { gid = gid }
+  init = init or {}
+  init.gid = gid
+  self[gid] = init
   return gid
 end
 

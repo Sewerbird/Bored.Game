@@ -10,7 +10,6 @@ LinearCoordinate.new = function (system, ...)
     self[field] = args[i]
   end
   self.system = system.gid
-  print(F"Created linear coordinate {inspect(self)} from {inspect(args)}")
   return self
 end
 
@@ -29,6 +28,34 @@ function LinearCoordinate:translate(...)
   end
   return self
 end
+
+local Position = {}
+Position.__index = Position
+Position.spaces = {
+  screenspace = {
+    fields = {"x","y"},
+    defaults = {0,0}
+  },
+  worldspace  = {
+    fields = {"x","y","z"},
+    defaults = {0,0}
+  },
+  boardspace = {
+    fields = {"row","col","z"},
+    defaults = {0,0,0}
+  }
+}
+Position.new = function(...)
+  local self = setmetatable({},Position)
+  for space, params in pairs(Position.spaces) do
+    self[space] = {}
+    for i, field in ipairs(params.fields) do
+      self[space][field] = Position.spaces[space].defaults[i]
+    end
+  end
+  return self
+end
+return Position
 
 local CoordinateSystem = {}
 

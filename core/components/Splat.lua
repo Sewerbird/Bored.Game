@@ -20,7 +20,7 @@ Splat.new = function(sheet, frames, frame_duration, origin_x, origin_y, scale_x,
   return self
 end
 
-function Splat:update(gob, dt)
+function Splat:update(dt)
   self.timer = self.timer + dt
   if self.timer > self.frame_duration then
     self.timer = self.timer - self.frame_duration
@@ -28,7 +28,7 @@ function Splat:update(gob, dt)
   end
 end
 
-function Splat:draw(gob)
+function Splat:draw()
   love.graphics.push()
   love.graphics.translate(self.origin_x,self.origin_y)
   love.graphics.setColor(self.red,self.green,self.blue)

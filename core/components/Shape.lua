@@ -72,6 +72,10 @@ function Rectangle:draw()
   love.graphics.pop()
 end
 
+function Rectangle:randomWithin()
+  return {x = 0, y = 0, z = 0}
+end
+
 --Circle
 function Circle:contains(test_x, test_y)
   return math.dist({test_x,test_y}, {self.origin_x, self.origin_y}) < self.radius
@@ -82,6 +86,10 @@ function Circle:draw()
   love.graphics.translate(self.origin_x, self.origin_y)
   love.graphics.circle('line', self.radius)
   love.graphics.pop()
+end
+
+function Circle:randomWithin()
+  return {x = 0, y = 0, z = 0}
 end
 
 --Iso
@@ -96,6 +104,10 @@ function Iso:draw()
   love.graphics.pop()
 end
 
+function Iso:randomWithin()
+  return {x = 0, y = 0, z = 0}
+end
+
 --Ellipse
 function Ellipse:contains(test_x, test_y)
   assert(false, "Sorry, ellipse isn't completely implemented yet")
@@ -108,6 +120,10 @@ function Ellipse:draw()
   love.graphics.pop()
 end
 
+function Ellipse:randomWithin()
+  return {x = 0, y = 0, z= 0}
+end
+
 --Polygon
 function Ellipse:contains(test_x, test_y)
   assert(false, "Sorry, polygon isn't completely implemented yet")
@@ -118,6 +134,10 @@ function Polygon:draw()
   love.graphics.translate(self.origin_x, self.origin_y)
   love.graphics.polygon('line',self.points)
   love.graphics.pop()
+end
+
+function Polygon:randomWithin()
+  return {x = 0, y = 0, z = 0}
 end
 
 return Shape
