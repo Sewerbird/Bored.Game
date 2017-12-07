@@ -10,8 +10,9 @@ SceneGraph.new = function(name, coordinate_system)
   self.gid = uuid()
   self.type = 'SceneGraph'
   self.name = name
+  local root_gid = uuid()
   self.root = GS:add({
-    gid = uuid(),
+    gid = root_gid,
     stead = Stead.new({x = 0, y = 0, z = 0},nil)
   })
   return self
@@ -36,7 +37,6 @@ function SceneGraph:traverse(root_gid, pre_fn, in_fn, post_fn)
   assert(GS[root_gid], F"UID not present in GS {root_gid}")
   if GS[root_gid].stead and GS[root_gid].stead.children then
     for key, _ in pairs(GS[root_gid].stead.children) do
-      print(F"Checking children of {inspect(GS[root_gid])}")
       local in_pre, in_post = self:traverse(key, pre_fn, in_fn, post_fn)
       if in_fn then in_fn(self, root_gid, in_pre, in_post) end
     end
