@@ -15,6 +15,9 @@ OrthographicCamera.new = function(graph, target)
 end
 function OrthographicCamera:refreshCache()
   local scene_ids = {}
+  --GS[self.graph]:traverse(self.target,function(self, gid)
+  --  table.insert(scene_ids, gid)
+  --end)
   for k, v in pairs(GS) do
     if v.stead then
       table.insert(scene_ids, k)
@@ -35,6 +38,7 @@ end
 function OrthographicCamera:draw()
   love.graphics.setBackgroundColor(200,200,200,255)
   love.graphics.setFont(self.debugFont)
+  --love.graphics.translate(200,150)
   if self.cache == nil then self:refreshCache() end
   local scene_ids = self.cache
   assert(#scene_ids > 0, "Scene id cache is empty.")

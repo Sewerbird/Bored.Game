@@ -79,6 +79,13 @@ local function add_to_map(map, event)
   end
 end
 
+function machine:update()
+  assert(self.gob_gid,F"No gob gid given for this machine! Updating update{self.current}, with {self.gob_gid}")
+  assert(GS[self.gob_gid],F"Gob_gid {self.gob_gid} isn't present in gamestate")
+  assert(self["update"..self.current],F"update function update{self.current} doesn't exist in {inspect(self)}")
+  return self["update"..self.current](GS[self.gob_gid])
+end
+
 function machine.create(options)
   assert(options.events, "You must specify 'events' option when creating a FSM")
 
@@ -87,6 +94,7 @@ function machine.create(options)
 
   fsm.options = options
   fsm.current = options.initial or 'none'
+  fsm.gob_gid = options.gid or nil
   fsm.asyncState = NONE
   fsm.events = {}
   fsm.states = options.states or {}
@@ -98,10 +106,10 @@ function machine.create(options)
     add_to_map(fsm.events[name].map, event)
   end
 
-  for state, behaviours in pairs(obtions.states, or {}) do
+  for state, behaviours in pairs(options.states or {}) do
     fsm["onenter"..state] = function(self, event, from, to, ...)
       for _, behaviour in ipairs(behaviours) do
-        behaviour:onLeave(self, event, from, to, ...)
+        behaviour:onEnter(self, event, from, to, ...)
       end
     end
     fsm["onleave"..state] = function(self, event, from, to, ...)
@@ -109,9 +117,13 @@ function machine.create(options)
         behaviour:onLeave(self, event, from, to, ...)
       end
     end
-    fsm["onupdate"] = function(self, event, from, to, ...)
-      for _, behaviour in ipairs(behaviours) do
-        behaviour:onLeave(self, event, from, to, ...)
+    fsm["update"..state] = function(self)
+      if #behaviours > 1 then
+        for _, behaviour in ipairs(behaviours) do
+          behaviour.onUpdate(self or nil)
+        end
+      else
+        behaviours.onUpdate(self or nil)
       end
     end
   end
@@ -122,6 +134,7 @@ function machine.create(options)
 
   return fsm
 end
+machine.new = machine.create
 
 function machine:is(state)
   return self.current == state
