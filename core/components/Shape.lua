@@ -7,6 +7,11 @@ local Iso = {}
 local Shape = {}
 
 Shape.__index = Shape
+Circle.__index = Circle
+Rectangle.__index = Rectangle
+Iso.__index = Rectangle
+Ellipse.__index = Ellipse
+Polygon.__index = Polygon
 
 Shape.circle = function(radius,rotation,o_x, o_y)
   local self = setmetatable({}, Circle)
@@ -68,7 +73,7 @@ end
 function Rectangle:draw()
   love.graphics.push()
   love.graphics.translate(self.origin_x, self.origin_y)
-  love.graphics.rectangle('line', self.width, self.height)
+  love.graphics.rectangle('line', 0, 0, self.width, self.height)
   love.graphics.pop()
 end
 
@@ -81,10 +86,10 @@ function Circle:contains(test_x, test_y)
   return math.dist({test_x,test_y}, {self.origin_x, self.origin_y}) < self.radius
 end
 
-function Circle:draw()
+function Circle:draw(style)
   love.graphics.push()
   love.graphics.translate(self.origin_x, self.origin_y)
-  love.graphics.circle('line', self.radius)
+  love.graphics.circle(style and style or 'line', 0, 0, self.radius)
   love.graphics.pop()
 end
 

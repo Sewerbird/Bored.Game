@@ -12,7 +12,7 @@ end
 function MessageBus:publish(topic, event, data)
   if not self.topics[topic] then return end
   for subscriber, callback in pairs(self.topics[topic]) do
-    callback(event, data)
+    callback(GS[subscriber], event, data)
   end
 end
 

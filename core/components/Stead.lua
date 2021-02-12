@@ -7,7 +7,7 @@ Stead.spaces = {
   },
   worldspace  = {
     fields = {"x","y","z"},
-    defaults = {0,0}
+    defaults = {0,0,0}
   },
   boardspace = {
     fields = {"row","col","z"},
@@ -22,8 +22,10 @@ Stead.setBoard = function(board)
   Stead.board = board
 end
 
-Stead.new = function(gob_gid, pos_table, parent)
+Stead.new = function(pos_table, parent)
   local self = setmetatable({},Stead)
+  self.parent = parent
+  self.children = {}
   for space, params in pairs(Stead.spaces) do
     self[space] = {}
     for i, field in ipairs(params.fields) do
